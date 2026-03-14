@@ -1,10 +1,10 @@
 <table class="table card-table table-vcenter queries">
   <thead>
     <tr>
-      <th class="width-25">Pid</th>
-      <th class="width-25">Duration</th>
-      <th class="width-25">State</th>
-      <th class="width-25"></th>
+      <th style="width: 25%">Pid</th>
+      <th style="width: 25%">Duration</th>
+      <th style="width: 25%">State</th>
+      <th style="width: 25%"></th>
     </tr>
   </thead>
   <tbody>
@@ -31,7 +31,7 @@
             <strong><%= vacuum_progress[query[:pid]][:phase] %></strong>
           <% end %>
         </td>
-        <td class="text-right">
+        <td class="text-end">
           <% unless @database.filter_data %>
             <%= button_to "Explain", explain_path, params: {query: query[:query]}, form: {target: "_blank"}, class: "btn btn-primary btn-sm" %>
           <% end %>

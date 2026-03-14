@@ -1,4 +1,4 @@
-<div class="content card card-body health-score-card">
+<div class="card card-body mb-3 health-score-card">
   <div class="health-score-header">
     <div>
       <h1>Health Score</h1>
@@ -31,7 +31,7 @@
         <% else %>
           High replication lag
         <% end %>
-        <span class="tiny"><%= number_with_delimiter((@replication_lag * 1000).round) %> ms</span>
+        <span class="small text-secondary ms-1"><%= number_with_delimiter((@replication_lag * 1000).round) %> ms</span>
       <% else %>
         Replication lag not supported
       <% end %>
@@ -48,10 +48,10 @@
       No long running queries
     <% end %>
     <% if @autovacuum_queries.any? %>
-      <span class="tiny"><%= @autovacuum_queries.size %> autovacuum</span>
+      <span class="small text-secondary ms-1"><%= @autovacuum_queries.size %> autovacuum</span>
     <% end %>
     <% if @walsender_queries.any? %>
-      <span class="tiny"><%= @walsender_queries.size %> walsender</span>
+      <span class="small text-secondary ms-1"><%= @walsender_queries.size %> walsender</span>
     <% end %>
   </div>
   <% if @extended %>
@@ -64,7 +64,7 @@
     </div>
   <% end %>
   <div class="alert alert-<%= @good_total_connections && @good_idle_connections ? "success" : "warning" %>">
-    <span class="tiny">
+    <span class="small text-secondary ms-1">
       <% if !@good_total_connections %>
         High number of connections <%= @total_connections %>
       <% elsif !@good_idle_connections %>
@@ -145,7 +145,7 @@
 </div>
 
 <% if params[:unreadable] && @unreadable_sequences.any? %>
-  <div class="content card card-body">
+  <div class="card card-body mb-3">
     <h1>Unreadable Sequences</h1>
 
     <p>This is likely due to missing privileges. Make sure your user has the SELECT privilege for each sequence.</p>
@@ -153,7 +153,7 @@
     <table class="table card-table table-vcenter">
       <thead>
         <tr>
-          <th class="width-33">Column</th>
+          <th style="width: 33%">Column</th>
           <th>Sequence</th>
         </tr>
       </thead>
@@ -184,7 +184,7 @@
 <% end %>
 
 <% if @replica && !@good_replication_lag %>
-  <div class="content card card-body">
+  <div class="card card-body mb-3">
     <h1>High Replication Lag</h1>
 
     <p><%= pluralize(@replication_lag.round, "second") %></p>
@@ -192,7 +192,7 @@
 <% end %>
 
 <% if @inactive_replication_slots && @inactive_replication_slots.any? %>
-  <div class="content card card-body">
+  <div class="card card-body mb-3">
     <h1>Inactive Replication Slots</h1>
     <p>Inactive replication slots can cause a lot of disk space to be consumed.</p>
     <p>For each, run:</p>
@@ -215,7 +215,7 @@
 <% end %>
 
 <% if @long_running_queries.any? %>
-  <div class="content card card-body">
+  <div class="card card-body mb-3">
     <div class="d-flex justify-content-end mb-3">
       <%= button_to "Kill All", kill_long_running_queries_path, class: "btn btn-outline-danger btn-sm" %>
     </div>
@@ -230,7 +230,7 @@
 <% end %>
 
 <% if @extended && !@good_cache_rate %>
-  <div class="content card card-body">
+  <div class="card card-body mb-3">
     <h1>Low Cache Hit Rate</h1>
 
     <p>
@@ -247,7 +247,7 @@
 <% end %>
 
 <% if !@good_total_connections %>
-  <div class="content card card-body">
+  <div class="card card-body mb-3">
     <h1>High Number of Connections</h1>
     <p><%= pluralize(@total_connections, "connection") %></p>
 
@@ -258,7 +258,7 @@
 <% end %>
 
 <% if !@good_idle_connections %>
-  <div class="content card card-body">
+  <div class="card card-body mb-3">
     <h1>High Number of Connections Idle in Transaction</h1>
     <p><%= pluralize(@idle_connections, "connection") %> idle in transaction</p>
     <p>Avoid opening transactions and doing work outside the database.</p>
@@ -267,7 +267,7 @@
 <% end %>
 
 <% if @transaction_id_danger.any? %>
-  <div class="content card card-body">
+  <div class="card card-body mb-3">
     <h2>Vacuuming Needed</h2>
     <p>The database <strong>will shutdown</strong> when there are fewer than 1,000,000 transactions left. <%= link_to "Read more", "https://www.postgresql.org/docs/current/static/routine-vacuuming.html#VACUUM-FOR-WRAPAROUND", target: "_blank" %>.</p>
 
@@ -279,7 +279,7 @@
       <thead>
         <tr>
           <th>Table</th>
-          <th class="width-20">Transactions Left</th>
+          <th style="width: 20%">Transactions Left</th>
         </tr>
       </thead>
       <tbody>
@@ -300,16 +300,16 @@
 <% end %>
 
 <% if @sequence_danger && @sequence_danger.any? %>
-  <div class="content card card-body">
+  <div class="card card-body mb-3">
     <h2>Columns Near Overflow</h2>
     <p>Consider changing columns to bigint to support a larger range of values.</p>
     <table class="table card-table table-vcenter">
       <thead>
         <tr>
           <th>Column</th>
-          <th class="width-20">Type</th>
-          <th class="width-20">Values Left</th>
-          <th class="width-10">% Left</th>
+          <th style="width: 20%">Type</th>
+          <th style="width: 20%">Values Left</th>
+          <th style="width: 10%">% Left</th>
         </tr>
       </thead>
       <tbody>
@@ -338,7 +338,7 @@
 <% end %>
 
 <% if @invalid_indexes.any? %>
-  <div class="content card card-body">
+  <div class="card card-body mb-3">
     <h1>Invalid Indexes</h1>
 
     <p>These indexes exist, but can’t be used. You should recreate them.</p>
@@ -372,7 +372,7 @@
 <% end %>
 
 <% if @invalid_constraints.any? %>
-  <div class="content card card-body">
+  <div class="card card-body mb-3">
     <h1>Invalid Constraints</h1>
 
     <p>These constraints are marked as <code>NOT VALID</code>. You should validate them.</p>
@@ -405,7 +405,7 @@
 <% end %>
 
 <% if @duplicate_indexes && @duplicate_indexes.any? %>
-  <div class="content card card-body">
+  <div class="card card-body mb-3">
     <h1>Duplicate Indexes</h1>
 
     <p>
@@ -448,7 +448,7 @@
 <% end %>
 
 <% if @suggested_indexes.any? %>
-  <div class="content card card-body">
+  <div class="card card-body mb-3">
     <h1>Suggested Indexes</h1>
     <p>
       Add indexes to speed up queries.
@@ -480,7 +480,7 @@
 <% end %>
 
 <% if !@query_stats_enabled %>
-  <div class="content card card-body">
+  <div class="card card-body mb-3">
     <h1>Query Stats</h1>
 
     <p>
@@ -500,7 +500,7 @@
 <% end %>
 
 <% if @query_stats_enabled && @slow_queries.any? %>
-  <div class="content card card-body">
+  <div class="card card-body mb-3">
     <h1>Slow Queries</h1>
 
     <p>Slow queries take <%= @database.slow_query_ms %> ms or more on average and have been called at least <%= @database.slow_query_calls %> times.</p>
@@ -511,7 +511,7 @@
 <% end %>
 
 <% if @extended && @unused_indexes.any? %>
-  <div class="content card card-body">
+  <div class="card card-body mb-3">
     <h1>Unused Indexes</h1>
 
     <p>
@@ -533,7 +533,7 @@
       <thead>
         <tr>
           <th>Name</th>
-          <th class="width-20">Index Size</th>
+          <th style="width: 20%">Index Size</th>
         </tr>
       </thead>
       <tbody>

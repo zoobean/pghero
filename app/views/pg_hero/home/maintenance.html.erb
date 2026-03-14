@@ -1,14 +1,14 @@
-<div class="content card card-body">
+<div class="card card-body mb-3">
   <h1>Maintenance</h1>
 
   <table class="table card-table table-vcenter">
     <thead>
       <tr>
         <th>Table</th>
-        <th class="width-20">Last Vacuum</th>
-        <th class="width-20">Last Analyze</th>
+        <th style="width: 20%">Last Vacuum</th>
+        <th style="width: 20%">Last Analyze</th>
         <% if @show_dead_rows %>
-          <th class="width-20">Dead Rows</th>
+          <th style="width: 20%">Dead Rows</th>
         <% end %>
       </tr>
     </thead>

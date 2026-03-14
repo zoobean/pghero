@@ -2,11 +2,11 @@
   <% unless local_assigns[:xhr] %>
     <thead>
       <tr>
-        <th class="width-33"><%= local_assigns[:sort_headers] ? link_to("Total Time", {sort: nil}, data: {sort: nil}) : "Total Time" %></th>
-        <th class="width-33"><%= local_assigns[:sort_headers] ? link_to("Average Time", {sort: "average_time"}, data: {sort: "average_time"}) : "Average Time" %></th>
-        <th class="width-33"><%= local_assigns[:sort_headers] ? link_to("Calls", {sort: "calls"}, data: {sort: "calls"}) : "Calls" %></th>
+        <th style="width: 33%"><%= local_assigns[:sort_headers] ? link_to("Total Time", {sort: nil}, data: {sort: nil}) : "Total Time" %></th>
+        <th style="width: 33%"><%= local_assigns[:sort_headers] ? link_to("Average Time", {sort: "average_time"}, data: {sort: "average_time"}) : "Average Time" %></th>
+        <th style="width: 33%"><%= local_assigns[:sort_headers] ? link_to("Calls", {sort: "calls"}, data: {sort: "calls"}) : "Calls" %></th>
         <% if @query_trends_by_key.present? %>
-          <th class="width-25">14-Day Trend</th>
+          <th style="width: 25%">14-Day Trend</th>
         <% end %>
       </tr>
     </thead>
@@ -29,7 +29,7 @@
       <tr>
         <td>
           <%= number_with_delimiter(query[:total_minutes].round) %> min
-          <span class="percent">
+          <span class="small text-secondary ms-1">
             <% percent = query[:total_percent] %>
             <% if percent > 1 %>
               <%= percent.round %>%
@@ -46,7 +46,7 @@
         <td>
           <%= number_with_delimiter(query[:calls]) %>
 
-          <span class="user">
+          <span class="float-end text-secondary small">
             <% if query[:user] %>
               <%= query[:user] %>
               <% if @show_details %>
@@ -63,7 +63,7 @@
           <td>
             <span class="trend-pill <%= pghero_query_trend_class(trend) %>"><%= pghero_query_trend_label(trend) %></span>
             <% if trend && trend[:change_pct] %>
-              <div class="tiny text-muted">
+              <div class="small text-secondary mt-1">
                 <%= number_with_precision(trend[:recent_average_time].to_f, precision: 1) %> ms recent
               </div>
             <% end %>

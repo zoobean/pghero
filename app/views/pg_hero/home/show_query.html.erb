@@ -1,4 +1,4 @@
-<div class="content card card-body">
+<div class="card card-body mb-3">
   <pre><code class="query-code"><%= @query %></code></pre>
   <%= javascript_tag nonce: true do %>
     highlightQueries()
@@ -11,11 +11,11 @@
   <% end %>
 
   <% if @origins && @origins.keys.select { |k| k.length > 0 }.any? %>
-    <table class="origins-table">
+    <table class="table table-vcenter origins-table">
       <thead>
         <tr>
           <th colspan="2">
-            <div class="push-right">Approx. Time</div>
+            <div class="float-end">Approx. Time</div>
             Origin
           </th>
         </tr>
@@ -50,7 +50,7 @@
       <div class="alert alert-<%= @query_trend[:direction] == :regressing ? "warning" : "success" %>">
         14-day trend:
         <span class="<%= pghero_query_trend_class(@query_trend) %>"><%= pghero_query_trend_label(@query_trend) %></span>
-        <span class="tiny">
+        <span class="small text-secondary ms-1">
           <%= number_with_precision(@query_trend[:baseline_average_time].to_f, precision: 1) %> ms baseline
           to
           <%= number_with_precision(@query_trend[:recent_average_time].to_f, precision: 1) %> ms recent
@@ -82,7 +82,7 @@
         <div class="alert alert-warning">
           Likely regression followed
           <%= link_to(release[:name].presence || release[:tag_name], release[:url], target: "_blank", rel: "noopener") %>
-          <span class="tiny"><%= pghero_formatted_date_time(release[:published_at]) %></span>
+          <span class="small text-secondary ms-1"><%= pghero_formatted_date_time(release[:published_at]) %></span>
         </div>
       <% elsif @release_correlation[:releases].any? %>
         <p>No clear release-aligned regression detected in the last <%= @trend_days %> days.</p>
@@ -94,9 +94,9 @@
         <table class="table card-table table-vcenter">
           <thead>
             <tr>
-              <th class="width-33">Release</th>
-              <th class="width-33">Published</th>
-              <th class="width-33">Commit</th>
+              <th style="width: 33%">Release</th>
+              <th style="width: 33%">Published</th>
+              <th style="width: 33%">Commit</th>
             </tr>
           </thead>
           <tbody>
@@ -134,11 +134,11 @@
   <!-- table info -->
   <% if @tables.any? %>
     <h1>Tables</h1>
-    <table>
+    <table class="table table-vcenter">
       <thead>
         <tr>
-          <th class="width-25">Name</th>
-          <th class="width-25">Rows</th>
+          <th style="width: 25%">Name</th>
+          <th style="width: 25%">Rows</th>
           <th>Indexes</th>
         </tr>
       </thead>

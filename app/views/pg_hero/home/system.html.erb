@@ -1,4 +1,4 @@
-<div class="content card card-body">
+<div class="card card-body mb-3">
   <p id="periods">
     <% @periods.each do |name, options| %>
       <%= link_to name, system_path(params: options) %>

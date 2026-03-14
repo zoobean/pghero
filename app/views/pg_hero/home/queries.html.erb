@@ -1,4 +1,4 @@
-<div class="content card card-body">
+<div class="card card-body mb-3">
   <% if @query_stats_enabled && !@historical_query_stats_enabled %>
     <div class="d-flex justify-content-end mb-3">
       <%= button_to "Reset", reset_query_stats_path, class: "btn btn-outline-danger btn-sm" %>

@@ -1,4 +1,4 @@
-<div class="content card card-body">
+<div class="card card-body mb-3">
   <h1>Space</h1>
 
   <p>Database Size: <%= @database_size %></p>
@@ -44,9 +44,9 @@
       <thead>
         <tr>
           <th><%= link_to (@only_tables ? "Table" : "Relation"), @header_options.merge(sort: "name") %></th>
-          <th class="width-15"><%= link_to "Size", @header_options %></th>
+          <th style="width: 15%"><%= link_to "Size", @header_options %></th>
           <% if @space_stats_enabled %>
-            <th class="width-15"><%= link_to "#{@days}d Growth", @header_options.merge(sort: "growth") %></th>
+            <th style="width: 15%"><%= link_to "#{@days}d Growth", @header_options.merge(sort: "growth") %></th>
           <% end %>
         </tr>
       </thead>
@@ -54,7 +54,7 @@
         <% @relation_sizes.each do |query| %>
           <tr>
             <td class="<%= query[:type] == "index" ? "space-index" : "" %>">
-              <span class="break-all">
+              <span class="text-break">
                 <% name = query[:relation] || query[:table] %>
                 <% if @space_stats_enabled %>
                   <%= link_to name, relation_space_path(name, schema: query[:schema]), target: "_blank", class: "relation-link" %>
@@ -66,7 +66,7 @@
                 <span class="text-muted"><%= query[:schema] %></span>
               <% end %>
               <% if @unused_index_names.include?(query[:relation]) %>
-                <span class="unused-index">UNUSED</span>
+                <span class="badge bg-yellow-lt ms-2">UNUSED</span>
               <% end %>
             </td>
             <td><%= query[:size] %></td>
