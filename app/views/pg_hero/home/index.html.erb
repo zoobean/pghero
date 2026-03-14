@@ -360,8 +360,8 @@
             </td>
           </tr>
           <tr>
-            <td class="query-row">
-              <pre><code>DROP INDEX CONCURRENTLY <%= pghero_pretty_ident(index[:name], schema: index[:schema]) %>;
+            <td class="p-0 border-top-0">
+              <pre class="mb-0"><code>DROP INDEX CONCURRENTLY <%= pghero_pretty_ident(index[:name], schema: index[:schema]) %>;
                   <%= index[:definition].sub("CREATE INDEX ", "CREATE INDEX CONCURRENTLY ") %>;</code></pre>
             </td>
           </tr>
@@ -394,8 +394,8 @@
             </td>
           </tr>
           <tr>
-            <td class="query-row">
-              <pre><code>ALTER TABLE <%= pghero_pretty_ident(constraint[:table], schema: constraint[:schema]) %> VALIDATE CONSTRAINT <%= pghero_pretty_ident(constraint[:name]) %>;</code></pre>
+            <td class="p-0 border-top-0">
+              <pre class="mb-0"><code>ALTER TABLE <%= pghero_pretty_ident(constraint[:table], schema: constraint[:schema]) %> VALIDATE CONSTRAINT <%= pghero_pretty_ident(constraint[:name]) %>;</code></pre>
             </td>
           </tr>
         <% end %>
@@ -409,19 +409,20 @@
     <h1>Duplicate Indexes</h1>
 
     <p>
-      These indexes exist, but aren’t needed. Remove them
-      <% if @show_migrations %>
-        <a href="#" class="migration-link">with a migration</a>
-      <% end %>
-      for faster writes.
+      These indexes exist, but aren’t needed. Remove them for faster writes.
     </p>
 
-    <div class="migration">
-      <pre>rails generate migration remove_unneeded_indexes</pre>
-      <p>And paste</p>
-      <pre><% @duplicate_indexes.each do |query| %>
-          <%= pghero_remove_index(query[:unneeded_index]) %><% end %></pre>
-    </div>
+    <% if @show_migrations %>
+      <details class="mb-3">
+        <summary class="btn btn-outline-secondary btn-sm">Show migration</summary>
+        <div class="mt-3">
+          <pre><code>rails generate migration remove_unneeded_indexes</code></pre>
+          <p>And paste</p>
+          <pre><code><% @duplicate_indexes.each do |query| %>
+          <%= pghero_remove_index(query[:unneeded_index]) %><% end %></code></pre>
+        </div>
+      </details>
+    <% end %>
 
     <table class="table card-table table-vcenter duplicate-indexes">
       <thead>
@@ -452,23 +453,24 @@
     <h1>Suggested Indexes</h1>
     <p>
       Add indexes to speed up queries.
-      <% if @show_migrations %>
-        Here’s a
-        <a href="#" class="migration-link">migration</a> to help.
-      <% end %>
     </p>
 
-    <div class="migration">
-      <pre>rails generate migration add_suggested_indexes</pre>
-      <p>And paste</p>
-      <pre>commit_db_transaction
+    <% if @show_migrations %>
+      <details class="mb-3">
+        <summary class="btn btn-outline-secondary btn-sm">Show migration</summary>
+        <div class="mt-3">
+          <pre><code>rails generate migration add_suggested_indexes</code></pre>
+          <p>And paste</p>
+          <pre><code>commit_db_transaction
         <% @suggested_indexes.each do |index| %>
           <% if index[:using] && index[:using] != "btree" %>
             add_index <%= index[:table].to_sym.inspect %>, <%= index[:columns].first.inspect %>, using: <%= index[:using].inspect %>, algorithm: :concurrently
           <% else %>
             add_index <%= index[:table].to_sym.inspect %>, [<%= index[:columns].map(&:to_sym).map(&:inspect).join(", ") %>], algorithm: :concurrently<% end %>
-        <% end %></pre>
-    </div>
+        <% end %></code></pre>
+        </div>
+      </details>
+    <% end %>
 
     <% @suggested_indexes.each_with_index do |index, i| %>
       <hr>
@@ -515,19 +517,20 @@
     <h1>Unused Indexes</h1>
 
     <p>
-      Unused indexes cause unnecessary overhead. Remove them
-      <% if @show_migrations %>
-        <a href="#" class="migration-link">with a migration</a>
-      <% end %>
-      for faster writes.
+      Unused indexes cause unnecessary overhead. Remove them for faster writes.
     </p>
 
-    <div class="migration">
-      <pre>rails generate migration remove_unused_indexes</pre>
-      <p>And paste</p>
-      <pre><% @unused_indexes.each do |query| %>
-          <%= pghero_remove_index(query) %><% end %></pre>
-    </div>
+    <% if @show_migrations %>
+      <details class="mb-3">
+        <summary class="btn btn-outline-secondary btn-sm">Show migration</summary>
+        <div class="mt-3">
+          <pre><code>rails generate migration remove_unused_indexes</code></pre>
+          <p>And paste</p>
+          <pre><code><% @unused_indexes.each do |query| %>
+          <%= pghero_remove_index(query) %><% end %></code></pre>
+        </div>
+      </details>
+    <% end %>
 
     <table class="table card-table table-vcenter">
       <thead>

@@ -19,8 +19,8 @@
     <div class="page">
       <aside class="navbar navbar-vertical navbar-expand-lg navbar-dark">
         <div class="container-fluid">
-          <h1 class="navbar-brand navbar-brand-autodark mb-4">
-            <%= link_to(@databases.size > 1 ? @database.name : "PgHero", root_path, class: "navbar-brand-link") %>
+          <h1 class="mb-4">
+            <%= link_to(@databases.size > 1 ? @database.name : "PgHero", root_path, class: "navbar-brand navbar-brand-autodark text-reset text-decoration-none m-0") %>
           </h1>
 
           <div class="navbar-nav flex-column">
@@ -44,7 +44,7 @@
           </div>
 
           <% if @databases.size > 1 %>
-            <div class="nav-section-title">Databases</div>
+            <div class="small text-uppercase text-secondary fw-bold mt-4 mb-2">Databases</div>
             <div class="navbar-nav flex-column">
               <% @databases.each do |database| %>
                 <%= link_to database.name, action_name == "show_query" ? root_path(database: database.id) : {database: database.id}, class: "nav-link #{(@database.id == database.id ? "active" : "")}" %>

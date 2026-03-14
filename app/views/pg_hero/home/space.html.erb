@@ -18,23 +18,24 @@
 
   <% if @unused_indexes.any? %>
     <p>
-      <%= pluralize(@unused_indexes.size, "unused index") %>. Remove them
-      <% if @show_migrations %>
-        <a href="#" class="migration-link">with a migration</a>
-      <% end %>
-      for faster writes.
+      <%= pluralize(@unused_indexes.size, "unused index") %>. Remove them for faster writes.
 
       <% if @database.replicating? %>
         Check they aren’t used on replicas.
       <% end %>
     </p>
 
-    <div class="migration">
-      <pre>rails generate migration remove_unused_indexes</pre>
-      <p>And paste</p>
-      <pre><% @unused_indexes.sort_by { |q| [-q[:size_bytes], q[:index]] }.each do |query| %>
-<%= pghero_remove_index(query) %><% end %></pre>
-    </div>
+    <% if @show_migrations %>
+      <details class="mb-3">
+        <summary class="btn btn-outline-secondary btn-sm">Show migration</summary>
+        <div class="mt-3">
+          <pre><code>rails generate migration remove_unused_indexes</code></pre>
+          <p>And paste</p>
+          <pre><code><% @unused_indexes.sort_by { |q| [-q[:size_bytes], q[:index]] }.each do |query| %>
+<%= pghero_remove_index(query) %><% end %></code></pre>
+        </div>
+      </details>
+    <% end %>
   <% end %>
 
   <% if @sizes_timeout %>
@@ -53,7 +54,7 @@
       <tbody>
         <% @relation_sizes.each do |query| %>
           <tr>
-            <td class="<%= query[:type] == "index" ? "space-index" : "" %>">
+            <td>
               <span class="text-break">
                 <% name = query[:relation] || query[:table] %>
                 <% if @space_stats_enabled %>

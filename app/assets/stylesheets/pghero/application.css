@@ -13,20 +13,6 @@
     background: transparent;
 }
 
-.navbar-brand-link {
-    color: inherit;
-    text-decoration: none;
-}
-
-.nav-section-title {
-    margin: 1rem 0 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--tblr-secondary);
-}
-
 #status,
 .alert {
     margin-bottom: 1rem;
@@ -56,10 +42,6 @@ pre {
     cursor: pointer;
 }
 
-.queries td {
-    vertical-align: middle;
-}
-
 .queries-table th a,
 .space-table th a,
 a.relation-link {
@@ -76,10 +58,6 @@ a.relation-link {
 
 #range-start {
     min-height: 1.25rem;
-}
-
-#range-end {
-    float: right;
 }
 
 .queries-info {
@@ -244,27 +222,6 @@ a.relation-link {
     line-height: 260px;
 }
 
-.unused-index,
-.primary-key {
-    font-size: 0.6875rem;
-    font-weight: 700;
-    color: var(--tblr-warning);
-}
-
-.origins-table {
-    table-layout: auto;
-}
-
-.origin {
-    width: 90%;
-    word-break: break-word;
-}
-
-.origin-pct {
-    width: 10%;
-    text-align: right;
-}
-
 .duplicate-indexes td {
     padding: 1rem 0 0.5rem;
 }
@@ -277,42 +234,8 @@ a.relation-link {
     outline: none;
 }
 
-.query-row {
-    padding: 0;
-    border-top: none;
-}
-
-.query-pre {
-    margin-top: 1rem;
-}
-
 .query-code {
     max-height: 230px;
     overflow: hidden;
-    cursor: pointer;
-}
-
-.migration,
-.hide {
-    display: none;
-}
-
-.migration pre {
-    overflow: auto;
-    white-space: pre;
-    word-break: normal;
-}
-
-.create-index,
-.details pre {
-    color: var(--tblr-light);
-    background-color: var(--tblr-dark);
-}
-
-.show-details {
-    float: right;
-    padding: 0.625rem;
-    margin-top: 0;
-    color: var(--tblr-warning);
     cursor: pointer;
 }

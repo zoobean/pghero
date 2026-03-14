@@ -71,8 +71,8 @@
         <% end %>
       </tr>
       <tr>
-        <td colspan="<%= @query_trends_by_key.present? ? 4 : 3 %>" class="query-row">
-          <pre><code class="query-code"><%= query[:query] %></code></pre>
+        <td colspan="<%= @query_trends_by_key.present? ? 4 : 3 %>" class="p-0 border-top-0">
+          <pre class="mb-0"><code class="query-code"><%= query[:query] %></code></pre>
           <% if query[:query] == "<insufficient privilege>" %>
             <p class="text-muted">For security reasons, only superusers can see queries executed by other users.</p>
           <% end %>

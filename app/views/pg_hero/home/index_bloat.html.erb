@@ -44,9 +44,9 @@
             </tr>
             <% if @show_sql && !index[:primary] %>
               <tr>
-                <td colspan="3" class="query-row">
+                <td colspan="3" class="p-0 border-top-0">
                   <% new_index = "new_#{index[:index]}".first(63) %>
-                  <pre><code><%= index[:definition].sub(" INDEX ", " INDEX CONCURRENTLY \n    ").sub(index[:index], new_index) %>;
+                  <pre class="mb-0"><code><%= index[:definition].sub(" INDEX ", " INDEX CONCURRENTLY \n    ").sub(index[:index], new_index) %>;
 
                       ANALYZE <%= pghero_pretty_ident(index[:table], schema: index[:schema]) %>;
 
