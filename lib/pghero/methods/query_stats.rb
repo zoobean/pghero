@@ -172,9 +172,8 @@ module PgHero
         query_stats.select { |q| q[:calls].to_i >= slow_query_calls.to_i && q[:average_time].to_f >= slow_query_ms.to_f }
       end
 
-      def query_hash_stats(query_hash, user: nil, current: false)
+      def query_hash_stats(query_hash, user: nil, current: false, start_at: 24.hours.ago)
         if historical_query_stats_enabled? && supports_query_hash?
-          start_at = 24.hours.ago
           stats = select_all_stats <<~SQL
             SELECT
               captured_at,
@@ -203,6 +202,106 @@ module PgHero
           stats
         else
           raise NotEnabled, "Query hash stats not enabled"
+        end
+      end
+
+      def query_hash_daily_stats(query_hash, user: nil, current: false, start_at: 14.days.ago, end_at: nil)
+        if historical_query_stats_enabled? && supports_query_hash?
+          stats = select_all_stats <<~SQL
+            SELECT
+              date_trunc('day', captured_at) AS captured_at,
+              SUM(total_time) / 1000 / 60 AS total_minutes,
+              (SUM(total_time) / NULLIF(SUM(calls), 0)) AS average_time,
+              SUM(calls) AS calls
+            FROM
+              pghero_query_stats
+            WHERE
+              database = #{quote(id)}
+              AND query_hash = #{quote(query_hash)}
+              #{user ? "AND \"user\" = #{quote(user)}" : ""}
+              #{start_at ? "AND captured_at >= #{quote(start_at)}" : ""}
+              #{end_at ? "AND captured_at <= #{quote(end_at)}" : ""}
+            GROUP BY
+              1
+            ORDER BY
+              1 ASC
+          SQL
+
+          if current
+            current_stats = current_query_stats(query_hash: query_hash, user: user)
+            if current_stats.any?
+              current_row = current_stats.first
+              current_day = Time.current.beginning_of_day
+              existing = stats.find { |row| row[:captured_at].to_time.beginning_of_day == current_day }
+              if existing
+                total_time = (existing[:total_minutes].to_f * 60 * 1000) + (current_row[:total_minutes].to_f * 60 * 1000)
+                calls = existing[:calls].to_i + current_row[:calls].to_i
+                existing[:total_minutes] += current_row[:total_minutes].to_f
+                existing[:calls] = calls
+                existing[:average_time] = total_time / calls if calls > 0
+              else
+                stats << {
+                  captured_at: current_day,
+                  total_minutes: current_row[:total_minutes],
+                  average_time: current_row[:average_time],
+                  calls: current_row[:calls]
+                }
+              end
+              stats.sort_by! { |row| row[:captured_at] }
+            end
+          end
+
+          stats
+        else
+          raise NotEnabled, "Query hash stats not enabled"
+        end
+      end
+
+      def query_hash_trend(query_hash, user: nil, days: 14, stats: nil)
+        stats ||= query_hash_daily_stats(query_hash, user: user, current: true, start_at: days.to_i.days.ago)
+        summarize_trend(stats, days: days)
+      end
+
+      def query_stats_trends(days: 14)
+        raise NotEnabled, "Historical query stats not enabled" unless historical_query_stats_enabled?
+
+        days = days.to_i
+        split_at = days.days.ago.to_date + (days / 2)
+
+        trend_rows = select_all_stats <<~SQL
+          WITH daily AS (
+            SELECT
+              query_hash,
+              "user" AS user,
+              date_trunc('day', captured_at)::date AS day,
+              SUM(total_time) AS total_time,
+              SUM(calls) AS calls
+            FROM
+              pghero_query_stats
+            WHERE
+              database = #{quote(id)}
+              AND captured_at >= #{quote(days.days.ago.beginning_of_day)}
+              #{supports_query_hash? ? "AND query_hash IS NOT NULL" : ""}
+            GROUP BY
+              1, 2, 3
+          )
+          SELECT
+            query_hash,
+            user,
+            SUM(CASE WHEN day < #{quote(split_at)} THEN total_time ELSE 0 END) / NULLIF(SUM(CASE WHEN day < #{quote(split_at)} THEN calls ELSE 0 END), 0) AS baseline_average_time,
+            SUM(CASE WHEN day >= #{quote(split_at)} THEN total_time ELSE 0 END) / NULLIF(SUM(CASE WHEN day >= #{quote(split_at)} THEN calls ELSE 0 END), 0) AS recent_average_time,
+            SUM(CASE WHEN day < #{quote(split_at)} THEN calls ELSE 0 END) AS baseline_calls,
+            SUM(CASE WHEN day >= #{quote(split_at)} THEN calls ELSE 0 END) AS recent_calls,
+            COUNT(CASE WHEN day < #{quote(split_at)} THEN 1 END) AS baseline_points,
+            COUNT(CASE WHEN day >= #{quote(split_at)} THEN 1 END) AS recent_points
+          FROM
+            daily
+          GROUP BY
+            1, 2
+        SQL
+
+        trend_rows.each_with_object({}) do |row, trends|
+          trends[[row[:query_hash], row[:user]]] = summarize_trend_row(row)
         end
       end
 
@@ -352,6 +451,77 @@ module PgHero
             }
           end
         PgHero::QueryStats.insert_all!(values)
+      end
+
+      def summarize_trend(stats, days:)
+        split_at = days.to_i.days.ago.to_date + (days.to_i / 2)
+        baseline_stats = stats.select { |row| row[:captured_at].to_date < split_at }
+        recent_stats = stats.select { |row| row[:captured_at].to_date >= split_at }
+
+        baseline_calls = baseline_stats.sum { |row| row[:calls].to_i }
+        recent_calls = recent_stats.sum { |row| row[:calls].to_i }
+
+        baseline_average_time =
+          if baseline_calls > 0
+            baseline_stats.sum { |row| row[:average_time].to_f * row[:calls].to_i } / baseline_calls
+          end
+
+        recent_average_time =
+          if recent_calls > 0
+            recent_stats.sum { |row| row[:average_time].to_f * row[:calls].to_i } / recent_calls
+          end
+
+        changes = []
+        stats.each_cons(2) do |previous_row, current_row|
+          previous_average = previous_row[:average_time].to_f
+          next unless previous_average > 0
+
+          change_pct = ((current_row[:average_time].to_f - previous_average) / previous_average) * 100.0
+          changes << {captured_at: current_row[:captured_at], change_pct: change_pct}
+        end
+
+        strongest_regression = changes.select { |change| change[:change_pct] >= 20 }.max_by { |change| change[:change_pct] }
+        summarize_trend_row(
+          baseline_average_time: baseline_average_time,
+          recent_average_time: recent_average_time,
+          baseline_calls: baseline_calls,
+          recent_calls: recent_calls,
+          baseline_points: baseline_stats.size,
+          recent_points: recent_stats.size,
+          regression_started_at: strongest_regression&.dig(:captured_at)
+        )
+      end
+
+      def summarize_trend_row(row)
+        baseline_average_time = row[:baseline_average_time].to_f
+        recent_average_time = row[:recent_average_time].to_f
+        change_pct =
+          if baseline_average_time > 0 && recent_average_time > 0
+            ((recent_average_time - baseline_average_time) / baseline_average_time) * 100.0
+          end
+
+        direction =
+          if change_pct.nil?
+            :unknown
+          elsif change_pct >= 10
+            :regressing
+          elsif change_pct <= -10
+            :improving
+          else
+            :stable
+          end
+
+        {
+          baseline_average_time: row[:baseline_average_time],
+          recent_average_time: row[:recent_average_time],
+          baseline_calls: row[:baseline_calls].to_i,
+          recent_calls: row[:recent_calls].to_i,
+          baseline_points: row[:baseline_points].to_i,
+          recent_points: row[:recent_points].to_i,
+          change_pct: change_pct,
+          direction: direction,
+          regression_started_at: row[:regression_started_at]
+        }
       end
     end
   end

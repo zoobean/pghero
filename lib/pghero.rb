@@ -9,11 +9,13 @@ require_relative "pghero/methods/basic"
 require_relative "pghero/methods/connections"
 require_relative "pghero/methods/constraints"
 require_relative "pghero/methods/explain"
+require_relative "pghero/methods/health"
 require_relative "pghero/methods/indexes"
 require_relative "pghero/methods/kill"
 require_relative "pghero/methods/maintenance"
 require_relative "pghero/methods/queries"
 require_relative "pghero/methods/query_stats"
+require_relative "pghero/methods/releases"
 require_relative "pghero/methods/replication"
 require_relative "pghero/methods/sequences"
 require_relative "pghero/methods/settings"
@@ -25,6 +27,7 @@ require_relative "pghero/methods/users"
 
 require_relative "pghero/database"
 require_relative "pghero/engine" if defined?(Rails)
+require_relative "pghero/github_client"
 require_relative "pghero/version"
 
 module PgHero
@@ -58,10 +61,10 @@ module PgHero
     def_delegators :primary_database, :aws_access_key_id, :analyze, :analyze_tables, :autoindex, :autovacuum_danger,
       :best_index, :blocked_queries, :connections, :connection_sources, :connection_states, :connection_stats,
       :cpu_usage, :create_user, :database_size, :aws_db_instance_identifier, :disable_query_stats, :drop_user,
-      :duplicate_indexes, :enable_query_stats, :explain, :historical_query_stats_enabled?, :index_caching,
+      :duplicate_indexes, :enable_query_stats, :explain, :historical_query_stats_enabled?, :health_score, :index_caching,
       :index_hit_rate, :index_usage, :indexes, :invalid_constraints, :invalid_indexes, :kill, :kill_all, :kill_long_running_queries,
       :last_stats_reset_time, :long_running_queries, :maintenance_info, :missing_indexes, :query_stats,
-      :query_stats_available?, :query_stats_enabled?, :query_stats_extension_enabled?, :query_stats_readable?,
+      :query_stats_available?, :query_stats_enabled?, :query_stats_extension_enabled?, :query_stats_readable?, :query_stats_trends,
       :rds_stats, :read_iops_stats, :aws_region, :relation_sizes, :replica?, :replication_lag, :replication_lag_stats,
       :reset_query_stats, :reset_stats, :running_queries, :aws_secret_access_key, :sequence_danger, :sequences, :settings,
       :slow_queries, :space_growth, :ssl_used?, :suggested_indexes, :suggested_indexes_by_query,

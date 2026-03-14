@@ -4,6 +4,7 @@ class ControllerTest < ActionDispatch::IntegrationTest
   def test_index
     get pg_hero.root_path
     assert_response :success
+    assert_match "Health Score", response.body
   end
 
   def test_space
@@ -27,13 +28,61 @@ class ControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_queries
-    get pg_hero.queries_path
+    with_stubbed_methods(
+      database,
+      query_stats_enabled?: true,
+      historical_query_stats_enabled?: true,
+      query_stats_trends: {[123, "postgres"] => {change_pct: 35.0, direction: :regressing, recent_average_time: 42.5}},
+      query_stats: ->(**) { [{query_hash: 123, user: "postgres", total_minutes: 10, total_percent: 20, average_time: 42.5, calls: 120, query: "SELECT * FROM users", explainable_query: "SELECT * FROM users"}] }
+    ) do
+      get pg_hero.queries_path, headers: {"HTTP_X_REQUESTED_WITH" => "XMLHttpRequest"}
+    end
     assert_response :success
+    assert_match "+35% slower", response.body
   end
 
   def test_show_query
-    get pg_hero.show_query_path(query_hash: 123)
+    with_stubbed_methods(
+      database,
+      query_stats_enabled?: true,
+      historical_query_stats_enabled?: true,
+      supports_query_hash?: true,
+      query_stats: ->(**) { [] }
+    ) do
+      get pg_hero.show_query_path(query_hash: 123)
+    end
     assert_response :not_found
+  end
+
+  def test_show_query_with_release_correlation
+    stats = [{query_hash: 123, user: "postgres", query: "SELECT * FROM users", explainable_query: "SELECT * FROM users"}]
+    history = [
+      {captured_at: 10.days.ago.beginning_of_day, total_minutes: 1.0, average_time: 100.0, calls: 10},
+      {captured_at: 2.days.ago.beginning_of_day, total_minutes: 5.0, average_time: 500.0, calls: 10}
+    ]
+    release_correlation = {
+      enabled: true,
+      correlated_release: {name: "v2.0.0", tag_name: "v2.0.0", url: "https://github.com/acme/widgets/releases/tag/v2.0.0", sha: "abcdef123456", published_at: 3.days.ago},
+      releases: [{name: "v2.0.0", tag_name: "v2.0.0", url: "https://github.com/acme/widgets/releases/tag/v2.0.0", sha: "abcdef123456", published_at: 3.days.ago}]
+    }
+
+    with_stubbed_methods(
+      database,
+      query_stats_enabled?: true,
+      historical_query_stats_enabled?: true,
+      supports_query_hash?: true,
+      query_stats: ->(**) { stats },
+      query_hash_stats: ->(*, **) { history.map { |row| row.merge(origin: nil) } },
+      query_hash_daily_stats: ->(*, **) { history },
+      query_hash_trend: {change_pct: 400.0, direction: :regressing, baseline_average_time: 100.0, recent_average_time: 500.0},
+      correlate_query_release: ->(*, **) { release_correlation }
+    ) do
+      get pg_hero.show_query_path(query_hash: 123, user: "postgres")
+    end
+
+    assert_response :success
+    assert_match "Release Correlation", response.body
+    assert_match "v2.0.0", response.body
   end
 
   def test_system

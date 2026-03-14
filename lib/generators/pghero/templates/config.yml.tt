@@ -7,6 +7,12 @@ databases:
     # aws_db_instance_identifier: my-instance
     # gcp_database_id: my-project:my-instance
     # azure_resource_id: my-resource-id
+    # github_token: <%%= ENV["PGHERO_GITHUB_TOKEN"] %>
+    # github_repo: owner/repo
+    # github_app_id: <%%= ENV["PGHERO_GITHUB_APP_ID"] %>
+    # github_installation_id: <%%= ENV["PGHERO_GITHUB_INSTALLATION_ID"] %>
+    # github_private_key: <%%= ENV["PGHERO_GITHUB_PRIVATE_KEY"] %>
+    # github_private_key_path: config/github-app.pem
 
   # Add more databases
   # other:

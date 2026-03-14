@@ -1,15 +1,17 @@
-<div class="content">
+<div class="content card card-body">
   <h1>Explain</h1>
 
   <%= form_tag explain_path do %>
-    <div class="field"><%= text_area_tag :query, @query, placeholder: "Enter a SQL query" %></div>
-    <p>
-      <%= submit_tag "Explain", class: "btn btn-info right-5" %>
+    <div class="mb-3">
+      <%= text_area_tag :query, @query, placeholder: "Enter a SQL query", class: "form-control font-monospace" %>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <%= submit_tag "Explain", class: "btn btn-primary" %>
       <% if @explain_analyze_enabled %>
-        <%= submit_tag "Analyze", class: "btn btn-danger right-5" %>
+        <%= submit_tag "Analyze", class: "btn btn-outline-danger" %>
       <% end %>
-      <%= submit_tag "Visualize", class: "btn btn-danger" %>
-    </p>
+      <%= submit_tag "Visualize", class: "btn btn-outline-secondary" %>
+    </div>
   <% end %>
 
   <% if @explanation %>

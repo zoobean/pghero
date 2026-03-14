@@ -1,4 +1,4 @@
-<div class="content">
+<div class="content card card-body">
   <pre><code class="query-code"><%= @query %></code></pre>
   <%= javascript_tag nonce: true do %>
     highlightQueries()
@@ -6,7 +6,7 @@
 
   <% if @explain_enabled && @explainable_query %>
     <p>
-      <%= button_to "Explain", explain_path, params: {query: @explainable_query}, form: {target: "_blank"}, class: "btn btn-info" %>
+      <%= button_to "Explain", explain_path, params: {query: @explainable_query}, form: {target: "_blank"}, class: "btn btn-primary" %>
     </p>
   <% end %>
 
@@ -46,22 +46,82 @@
 
   <!-- chart -->
   <% if @chart_data %>
-    <h1>Total Time <small>ms</small></h1>
+    <% if @query_trend && @query_trend[:change_pct] %>
+      <div class="alert alert-<%= @query_trend[:direction] == :regressing ? "warning" : "success" %>">
+        14-day trend:
+        <span class="<%= pghero_query_trend_class(@query_trend) %>"><%= pghero_query_trend_label(@query_trend) %></span>
+        <span class="tiny">
+          <%= number_with_precision(@query_trend[:baseline_average_time].to_f, precision: 1) %> ms baseline
+          to
+          <%= number_with_precision(@query_trend[:recent_average_time].to_f, precision: 1) %> ms recent
+        </span>
+      </div>
+    <% end %>
+
+    <h1><%= @trend_days %>-Day Total Time <small>ms</small></h1>
     <div id="chart-1" class="chart">Loading...</div>
     <%= javascript_tag nonce: true do %>
       new Chartkick.LineChart("chart-1", <%= pghero_js_value(@chart_data) %>, {colors: ["#5bc0de"], legend: false, library: {plugins: {tooltip: {intersect: false, mode: "index"}}}})
     <% end %>
 
-    <h1>Average Time <small>ms</small></h1>
+    <h1><%= @trend_days %>-Day Average Time <small>ms</small></h1>
     <div id="chart-2" class="chart">Loading...</div>
     <%= javascript_tag nonce: true do %>
       new Chartkick.LineChart("chart-2", <%= pghero_js_value(@chart2_data) %>, {colors: ["#5bc0de"], legend: false, library: {plugins: {tooltip: {intersect: false, mode: "index"}}}})
     <% end %>
 
-    <h1>Calls</h1>
+    <h1><%= @trend_days %>-Day Calls</h1>
     <div id="chart-3" class="chart">Loading...</div>
     <%= javascript_tag nonce: true do %>
       new Chartkick.LineChart("chart-3", <%= pghero_js_value(@chart3_data) %>, {colors: ["#5bc0de"], legend: false, library: {plugins: {tooltip: {intersect: false, mode: "index"}}}})
+    <% end %>
+
+    <h1>Release Correlation</h1>
+    <% if @release_correlation && @release_correlation[:enabled] %>
+      <% if (release = @release_correlation[:correlated_release]) %>
+        <div class="alert alert-warning">
+          Likely regression followed
+          <%= link_to(release[:name].presence || release[:tag_name], release[:url], target: "_blank", rel: "noopener") %>
+          <span class="tiny"><%= pghero_formatted_date_time(release[:published_at]) %></span>
+        </div>
+      <% elsif @release_correlation[:releases].any? %>
+        <p>No clear release-aligned regression detected in the last <%= @trend_days %> days.</p>
+      <% else %>
+        <p>No recent published releases found in the last <%= @trend_days %> days.</p>
+      <% end %>
+
+      <% if @release_correlation[:releases].any? %>
+        <table class="table card-table table-vcenter">
+          <thead>
+            <tr>
+              <th class="width-33">Release</th>
+              <th class="width-33">Published</th>
+              <th class="width-33">Commit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @release_correlation[:releases].reverse_each do |release| %>
+              <tr>
+                <td>
+                  <%= link_to(release[:name].presence || release[:tag_name], release[:url], target: "_blank", rel: "noopener") %>
+                </td>
+                <td><%= pghero_formatted_date_time(release[:published_at]) %></td>
+                <td>
+                  <% if (commit_url = pghero_github_commit_url(@database.github_repo, release[:sha])) %>
+                    <%= link_to release[:sha].to_s.first(7), commit_url, target: "_blank", rel: "noopener" %>
+                  <% else %>
+                    <%= release[:sha] %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% end %>
+    <% else %>
+      <p>
+        Configure <code>github_repo</code> and either <code>github_token</code> or <code>github_app_id</code> plus a private key to correlate regressions with GitHub releases.
+      </p>
     <% end %>
   <% else %>
     <p>

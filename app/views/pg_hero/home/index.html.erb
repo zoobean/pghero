@@ -1,3 +1,27 @@
+<div class="content card card-body health-score-card">
+  <div class="health-score-header">
+    <div>
+      <h1>Health Score</h1>
+      <p class="text-muted">0-100 based on slow queries, unused indexes, cache hit ratio, autovacuum, and connection saturation.</p>
+    </div>
+    <div class="health-score-badge health-score-<%= pghero_health_score_class(@health[:score]) %>">
+      <span class="health-score-value"><%= @health[:score] %></span>
+      <span class="health-score-scale">/ 100</span>
+    </div>
+  </div>
+
+  <div class="health-components">
+    <% @health[:components].each do |component| %>
+      <div class="health-component health-component-<%= component[:status] %>">
+        <div class="health-component-title"><%= component[:title] %></div>
+        <div class="health-component-score"><%= component[:score] %> / <%= component[:max_score] %></div>
+        <div class="health-component-value"><%= component[:value] %></div>
+        <div class="health-component-details text-muted"><%= component[:details] %></div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
 <div id="status">
   <% if @replica %>
     <div class="alert alert-<%= @good_replication_lag ? "success" : "warning" %>">
@@ -40,13 +64,15 @@
     </div>
   <% end %>
   <div class="alert alert-<%= @good_total_connections && @good_idle_connections ? "success" : "warning" %>">
-    <% if !@good_total_connections %>
-      High number of connections <span class="tiny"><%= @total_connections %></span>
-    <% elsif !@good_idle_connections %>
-      High number of connections idle in transaction <span class="tiny"><%= @idle_connections %></span>
-    <% else %>
-      Connections healthy <span class="tiny"><%= @total_connections %></span>
-    <% end %>
+    <span class="tiny">
+      <% if !@good_total_connections %>
+        High number of connections <%= @total_connections %>
+      <% elsif !@good_idle_connections %>
+        High number of connections idle in transaction <%= @idle_connections %>
+      <% else %>
+        Connections healthy <%= @total_connections %>
+      <% end %>
+    </span>
   </div>
   <div class="alert alert-<%= @transaction_id_danger.empty? ? "success" : "warning" %>">
     <% if @transaction_id_danger.any? %>
@@ -68,7 +94,7 @@
     <% end %>
   </div>
   <div class="alert alert-<%= @invalid_indexes.empty? && @invalid_constraints.empty? ? "success" : "warning" %>">
-    <% if @invalid_indexes.empty? && @invalid_constraints.empty?  %>
+    <% if @invalid_indexes.empty? && @invalid_constraints.empty? %>
       No invalid indexes or constraints
     <% else %>
       <% if @invalid_indexes.any? %>
@@ -119,12 +145,12 @@
 </div>
 
 <% if params[:unreadable] && @unreadable_sequences.any? %>
-  <div class="content">
+  <div class="content card card-body">
     <h1>Unreadable Sequences</h1>
 
     <p>This is likely due to missing privileges. Make sure your user has the SELECT privilege for each sequence.</p>
 
-    <table class="table">
+    <table class="table card-table table-vcenter">
       <thead>
         <tr>
           <th class="width-33">Column</th>
@@ -158,7 +184,7 @@
 <% end %>
 
 <% if @replica && !@good_replication_lag %>
-  <div class="content">
+  <div class="content card card-body">
     <h1>High Replication Lag</h1>
 
     <p><%= pluralize(@replication_lag.round, "second") %></p>
@@ -166,12 +192,12 @@
 <% end %>
 
 <% if @inactive_replication_slots && @inactive_replication_slots.any? %>
-  <div class="content">
+  <div class="content card card-body">
     <h1>Inactive Replication Slots</h1>
     <p>Inactive replication slots can cause a lot of disk space to be consumed.</p>
     <p>For each, run:</p>
     <pre><code>SELECT pg_drop_replication_slot('slot_name');</code></pre>
-    <table class="table">
+    <table class="table card-table table-vcenter">
       <thead>
         <tr>
           <th>Name</th>
@@ -189,8 +215,10 @@
 <% end %>
 
 <% if @long_running_queries.any? %>
-  <div class="content">
-    <%= button_to "Kill All", kill_long_running_queries_path, class: "btn btn-danger", style: "float: right;" %>
+  <div class="content card card-body">
+    <div class="d-flex justify-content-end mb-3">
+      <%= button_to "Kill All", kill_long_running_queries_path, class: "btn btn-outline-danger btn-sm" %>
+    </div>
     <h1>Long Running Queries</h1>
 
     <p>We recommend setting a statement timeout on all non-superusers with:</p>
@@ -202,12 +230,12 @@
 <% end %>
 
 <% if @extended && !@good_cache_rate %>
-  <div class="content">
+  <div class="content card card-body">
     <h1>Low Cache Hit Rate</h1>
 
     <p>
       Index Hit Rate: <%= (@index_hit_rate * 100).round(1) %>%
-      <br />
+      <br>
       Table Hit Rate: <%= (@table_hit_rate * 100).round(1) %>%
     </p>
 
@@ -219,7 +247,7 @@
 <% end %>
 
 <% if !@good_total_connections %>
-  <div class="content">
+  <div class="content card card-body">
     <h1>High Number of Connections</h1>
     <p><%= pluralize(@total_connections, "connection") %></p>
 
@@ -230,7 +258,7 @@
 <% end %>
 
 <% if !@good_idle_connections %>
-  <div class="content">
+  <div class="content card card-body">
     <h1>High Number of Connections Idle in Transaction</h1>
     <p><%= pluralize(@idle_connections, "connection") %> idle in transaction</p>
     <p>Avoid opening transactions and doing work outside the database.</p>
@@ -239,7 +267,7 @@
 <% end %>
 
 <% if @transaction_id_danger.any? %>
-  <div class="content">
+  <div class="content card card-body">
     <h2>Vacuuming Needed</h2>
     <p>The database <strong>will shutdown</strong> when there are fewer than 1,000,000 transactions left. <%= link_to "Read more", "https://www.postgresql.org/docs/current/static/routine-vacuuming.html#VACUUM-FOR-WRAPAROUND", target: "_blank" %>.</p>
 
@@ -247,7 +275,7 @@
 
     <p>If that doesn’t work, for each table, run:</p>
     <pre><code>VACUUM FREEZE VERBOSE table;</code></pre>
-    <table class="table">
+    <table class="table card-table table-vcenter">
       <thead>
         <tr>
           <th>Table</th>
@@ -272,10 +300,10 @@
 <% end %>
 
 <% if @sequence_danger && @sequence_danger.any? %>
-  <div class="content">
+  <div class="content card card-body">
     <h2>Columns Near Overflow</h2>
     <p>Consider changing columns to bigint to support a larger range of values.</p>
-    <table class="table">
+    <table class="table card-table table-vcenter">
       <thead>
         <tr>
           <th>Column</th>
@@ -310,12 +338,12 @@
 <% end %>
 
 <% if @invalid_indexes.any? %>
-  <div class="content">
+  <div class="content card card-body">
     <h1>Invalid Indexes</h1>
 
     <p>These indexes exist, but can’t be used. You should recreate them.</p>
 
-    <table class="table">
+    <table class="table card-table table-vcenter">
       <thead>
         <tr>
           <th>Name</th>
@@ -334,7 +362,7 @@
           <tr>
             <td class="query-row">
               <pre><code>DROP INDEX CONCURRENTLY <%= pghero_pretty_ident(index[:name], schema: index[:schema]) %>;
-<%= index[:definition].sub("CREATE INDEX ", "CREATE INDEX CONCURRENTLY ") %>;</code></pre>
+                  <%= index[:definition].sub("CREATE INDEX ", "CREATE INDEX CONCURRENTLY ") %>;</code></pre>
             </td>
           </tr>
         <% end %>
@@ -344,12 +372,12 @@
 <% end %>
 
 <% if @invalid_constraints.any? %>
-  <div class="content">
+  <div class="content card card-body">
     <h1>Invalid Constraints</h1>
 
     <p>These constraints are marked as <code>NOT VALID</code>. You should validate them.</p>
 
-    <table class="table">
+    <table class="table card-table table-vcenter">
       <thead>
         <tr>
           <th>Name</th>
@@ -377,13 +405,13 @@
 <% end %>
 
 <% if @duplicate_indexes && @duplicate_indexes.any? %>
-  <div class="content">
+  <div class="content card card-body">
     <h1>Duplicate Indexes</h1>
 
     <p>
       These indexes exist, but aren’t needed. Remove them
       <% if @show_migrations %>
-      <a href="#" class="migration-link">with a migration</a>
+        <a href="#" class="migration-link">with a migration</a>
       <% end %>
       for faster writes.
     </p>
@@ -392,10 +420,10 @@
       <pre>rails generate migration remove_unneeded_indexes</pre>
       <p>And paste</p>
       <pre><% @duplicate_indexes.each do |query| %>
-<%= pghero_remove_index(query[:unneeded_index]) %><% end %></pre>
+          <%= pghero_remove_index(query[:unneeded_index]) %><% end %></pre>
     </div>
 
-    <table class="table duplicate-indexes">
+    <table class="table card-table table-vcenter duplicate-indexes">
       <thead>
         <tr>
           <th>Details</th>
@@ -420,13 +448,13 @@
 <% end %>
 
 <% if @suggested_indexes.any? %>
-  <div class="content">
+  <div class="content card card-body">
     <h1>Suggested Indexes</h1>
     <p>
       Add indexes to speed up queries.
       <% if @show_migrations %>
-      Here’s a
-      <a href="#" class="migration-link">migration</a> to help.
+        Here’s a
+        <a href="#" class="migration-link">migration</a> to help.
       <% end %>
     </p>
 
@@ -434,16 +462,16 @@
       <pre>rails generate migration add_suggested_indexes</pre>
       <p>And paste</p>
       <pre>commit_db_transaction
-<% @suggested_indexes.each do |index| %>
-<% if index[:using] && index[:using] != "btree" %>
-add_index <%= index[:table].to_sym.inspect %>, <%= index[:columns].first.inspect %>, using: <%= index[:using].inspect %>, algorithm: :concurrently
-<% else %>
-add_index <%= index[:table].to_sym.inspect %>, [<%= index[:columns].map(&:to_sym).map(&:inspect).join(", ") %>], algorithm: :concurrently<% end %>
-<% end %></pre>
+        <% @suggested_indexes.each do |index| %>
+          <% if index[:using] && index[:using] != "btree" %>
+            add_index <%= index[:table].to_sym.inspect %>, <%= index[:columns].first.inspect %>, using: <%= index[:using].inspect %>, algorithm: :concurrently
+          <% else %>
+            add_index <%= index[:table].to_sym.inspect %>, [<%= index[:columns].map(&:to_sym).map(&:inspect).join(", ") %>], algorithm: :concurrently<% end %>
+        <% end %></pre>
     </div>
 
     <% @suggested_indexes.each_with_index do |index, i| %>
-      <hr />
+      <hr>
       <%= render partial: "suggested_index", locals: {index: index, details: index[:details]} %>
       <p>to speed up</p>
       <%= render partial: "queries_table", locals: {queries: index[:queries].map { |q| @query_stats_by_query[q] }, suggested_indexes: false} %>
@@ -452,25 +480,27 @@ add_index <%= index[:table].to_sym.inspect %>, [<%= index[:columns].map(&:to_sym
 <% end %>
 
 <% if !@query_stats_enabled %>
-  <div class="content">
+  <div class="content card card-body">
     <h1>Query Stats</h1>
 
-    <% if @query_stats_available && !@query_stats_extension_enabled %>
-      <p>
+    <p>
+      <% if @query_stats_available && !@query_stats_extension_enabled %>
+
         Query stats are available but not enabled.
-        <%= button_to "Enable", enable_query_stats_path, class: "btn btn-info" %>
-      </p>
-    <% else %>
-      <p>Make them available by adding the following lines to <code>postgresql.conf</code>:</p>
-      <pre>shared_preload_libraries = 'pg_stat_statements'
-pg_stat_statements.track = all</pre>
-      <p>Restart the server for the changes to take effect.</p>
-    <% end %>
+        <%= button_to "Enable", enable_query_stats_path, class: "btn btn-primary" %>
+
+      <% else %>
+        Make them available by adding the following lines to <code>postgresql.conf</code>:
+        <pre>shared_preload_libraries = 'pg_stat_statements'
+          pg_stat_statements.track = all</pre>
+        <p>Restart the server for the changes to take effect.</p>
+      <% end %>
+    </p>
   </div>
 <% end %>
 
 <% if @query_stats_enabled && @slow_queries.any? %>
-  <div class="content">
+  <div class="content card card-body">
     <h1>Slow Queries</h1>
 
     <p>Slow queries take <%= @database.slow_query_ms %> ms or more on average and have been called at least <%= @database.slow_query_calls %> times.</p>
@@ -481,7 +511,7 @@ pg_stat_statements.track = all</pre>
 <% end %>
 
 <% if @extended && @unused_indexes.any? %>
-  <div class="content">
+  <div class="content card card-body">
     <h1>Unused Indexes</h1>
 
     <p>
@@ -496,10 +526,10 @@ pg_stat_statements.track = all</pre>
       <pre>rails generate migration remove_unused_indexes</pre>
       <p>And paste</p>
       <pre><% @unused_indexes.each do |query| %>
-<%= pghero_remove_index(query)%><% end %></pre>
+          <%= pghero_remove_index(query) %><% end %></pre>
     </div>
 
-    <table class="table">
+    <table class="table card-table table-vcenter">
       <thead>
         <tr>
           <th>Name</th>

@@ -1,4 +1,4 @@
-<div class="content">
+<div class="content card card-body">
   <h1>Space</h1>
 
   <p>Database Size: <%= @database_size %></p>
@@ -40,7 +40,7 @@
   <% if @sizes_timeout %>
     <p>Breakdown not available (system catalog locked)</p>
   <% else %>
-    <table class="table space-table">
+    <table class="table card-table table-vcenter space-table">
       <thead>
         <tr>
           <th><%= link_to (@only_tables ? "Table" : "Relation"), @header_options.merge(sort: "name") %></th>

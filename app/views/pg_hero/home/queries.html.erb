@@ -1,16 +1,18 @@
-<div class="content">
+<div class="content card card-body">
   <% if @query_stats_enabled && !@historical_query_stats_enabled %>
-    <%= button_to "Reset", reset_query_stats_path, class: "btn btn-danger", style: "float: right;" %>
+    <div class="d-flex justify-content-end mb-3">
+      <%= button_to "Reset", reset_query_stats_path, class: "btn btn-outline-danger btn-sm" %>
+    </div>
   <% end %>
 
   <% if !@historical_query_stats_enabled %>
-    <h1 class="push-left">Queries</h1>
+    <h1>Queries</h1>
   <% end %>
 
   <% if @historical_query_stats_enabled %>
     <%= render partial: "query_stats_slider" %>
   <% elsif @database.query_stats_table_exists? && (columns = @database.missing_query_stats_columns).any? %>
-    <div class="clear-both">
+    <div>
       <p>Add missing columns to re-enable historical query stats.</p>
       <pre><code><% @database.missing_query_stats_columns.each do |column| %>ALTER TABLE pghero_query_stats ADD COLUMN "<%= column %>" <%= column == "query_hash" ? "bigint" : "text" %>;
 <% end %></code></pre>

@@ -126,6 +126,41 @@ class QueryStatsTest < Minitest::Test
     assert database.slow_queries
   end
 
+  def test_query_hash_daily_stats
+    PgHero::QueryStats.delete_all
+    now = Time.current
+
+    PgHero::QueryStats.insert_all!([
+      {database: database.id, user: "postgres", query: "SELECT $1", query_hash: 123, total_time: 300, calls: 3, captured_at: now - 10.days},
+      {database: database.id, user: "postgres", query: "SELECT $1", query_hash: 123, total_time: 600, calls: 3, captured_at: now - 9.days},
+      {database: database.id, user: "postgres", query: "SELECT $1", query_hash: 123, total_time: 1600, calls: 4, captured_at: now - 2.days},
+      {database: database.id, user: "postgres", query: "SELECT $1", query_hash: 123, total_time: 2000, calls: 4, captured_at: now - 1.day}
+    ])
+
+    stats = database.query_hash_daily_stats(123, user: "postgres", start_at: 14.days.ago, current: false)
+
+    assert_equal 4, stats.size
+    assert_equal 100.0, stats.first[:average_time]
+    assert_equal 500.0, stats.last[:average_time]
+  end
+
+  def test_query_stats_trends
+    PgHero::QueryStats.delete_all
+    now = Time.current
+
+    PgHero::QueryStats.insert_all!([
+      {database: database.id, user: "postgres", query: "SELECT $1", query_hash: 123, total_time: 300, calls: 3, captured_at: now - 10.days},
+      {database: database.id, user: "postgres", query: "SELECT $1", query_hash: 123, total_time: 600, calls: 6, captured_at: now - 9.days},
+      {database: database.id, user: "postgres", query: "SELECT $1", query_hash: 123, total_time: 2000, calls: 4, captured_at: now - 2.days},
+      {database: database.id, user: "postgres", query: "SELECT $1", query_hash: 123, total_time: 2400, calls: 4, captured_at: now - 1.day}
+    ])
+
+    trend = database.query_stats_trends(days: 14)[[123, "postgres"]]
+
+    assert_equal :regressing, trend[:direction]
+    assert_in_delta 450.0, trend[:change_pct], 0.1
+  end
+
   def gte12?
     database.server_version_num >= 120000
   end

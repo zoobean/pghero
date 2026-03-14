@@ -1,4 +1,4 @@
-<table class="table queries">
+<table class="table card-table table-vcenter queries">
   <thead>
     <tr>
       <th class="width-25">Pid</th>
@@ -27,15 +27,15 @@
         <td>
           <%= query[:state] %>
           <% if vacuum_progress[query[:pid]] %>
-            <br />
+            <br>
             <strong><%= vacuum_progress[query[:pid]][:phase] %></strong>
           <% end %>
         </td>
         <td class="text-right">
           <% unless @database.filter_data %>
-            <%= button_to "Explain", explain_path, params: {query: query[:query]}, form: {target: "_blank"}, class: "btn btn-info" %>
+            <%= button_to "Explain", explain_path, params: {query: query[:query]}, form: {target: "_blank"}, class: "btn btn-primary btn-sm" %>
           <% end %>
-          <%= button_to "Kill", kill_path(pid: query[:pid]), class: "btn btn-danger" %>
+          <%= button_to "Kill", kill_path(pid: query[:pid]), class: "btn btn-outline-danger btn-sm" %>
         </td>
       </tr>
       <tr>

@@ -17,7 +17,7 @@ module PgHero
       # users should set CSP manually if needed
       # see https://github.com/ankane/pghero/issues/297
       after_action do
-        response.headers["Content-Security-Policy"] = "default-src 'self' 'unsafe-inline'"
+        response.headers["Content-Security-Policy"] = "default-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'"
       end
     end
 
@@ -26,6 +26,7 @@ module PgHero
     def index
       @title = "Overview"
       @extended = params[:extended]
+      @health = @database.health_score
 
       if @replica
         @replication_lag = @database.replication_lag
@@ -170,6 +171,8 @@ module PgHero
         @debug = params[:debug].present?
       end
 
+      @query_trends_by_key = @historical_query_stats_enabled ? @database.query_stats_trends(days: 14) : {}
+
       # fix back button issue with caching
       response.headers["Cache-Control"] = "must-revalidate, no-store, no-cache, private"
       if request.xhr?
@@ -181,18 +184,22 @@ module PgHero
       @query_hash = params[:query_hash].to_i
       @user = params[:user].to_s
       @title = @query_hash
+      @trend_days = 14
 
-      stats = @database.query_stats(historical: true, query_hash: @query_hash, start_at: 24.hours.ago).find { |qs| qs[:user] == @user }
+      stats = @database.query_stats(historical: true, query_hash: @query_hash, start_at: @trend_days.days.ago).find { |qs| qs[:user] == @user }
       if stats
         @query = stats[:query]
         @explainable_query = stats[:explainable_query]
 
         if @show_details
-          query_hash_stats = @database.query_hash_stats(@query_hash, user: @user, current: true)
+          query_hash_stats = @database.query_hash_stats(@query_hash, user: @user, current: true, start_at: @trend_days.days.ago)
+          query_hash_daily_stats = @database.query_hash_daily_stats(@query_hash, user: @user, current: true, start_at: @trend_days.days.ago)
+          @query_trend = @database.query_hash_trend(@query_hash, user: @user, days: @trend_days, stats: query_hash_daily_stats)
+          @release_correlation = @database.correlate_query_release(@query_hash, user: @user, days: @trend_days, stats: query_hash_daily_stats)
 
-          @chart_data = [{name: "Value", data: query_hash_stats.map { |r| [r[:captured_at].change(sec: 0), (r[:total_minutes] * 60 * 1000).round] }, library: chart_library_options}]
-          @chart2_data = [{name: "Value", data: query_hash_stats.map { |r| [r[:captured_at].change(sec: 0), r[:average_time].round(1)] }, library: chart_library_options}]
-          @chart3_data = [{name: "Value", data: query_hash_stats.map { |r| [r[:captured_at].change(sec: 0), r[:calls]] }, library: chart_library_options}]
+          @chart_data = [{name: "Value", data: query_hash_daily_stats.map { |r| [r[:captured_at].change(sec: 0), (r[:total_minutes] * 60 * 1000).round] }, library: chart_library_options}]
+          @chart2_data = [{name: "Value", data: query_hash_daily_stats.map { |r| [r[:captured_at].change(sec: 0), r[:average_time].round(1)] }, library: chart_library_options}]
+          @chart3_data = [{name: "Value", data: query_hash_daily_stats.map { |r| [r[:captured_at].change(sec: 0), r[:calls]] }, library: chart_library_options}]
 
           @origins = query_hash_stats.group_by { |r| r[:origin].to_s }.to_h { |k, v| [k, v.size] }
           @total_count = query_hash_stats.size

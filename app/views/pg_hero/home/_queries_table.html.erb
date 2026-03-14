@@ -1,17 +1,20 @@
-<table class="table queries-table">
+<table class="table card-table table-vcenter queries-table">
   <% unless local_assigns[:xhr] %>
     <thead>
       <tr>
         <th class="width-33"><%= local_assigns[:sort_headers] ? link_to("Total Time", {sort: nil}, data: {sort: nil}) : "Total Time" %></th>
         <th class="width-33"><%= local_assigns[:sort_headers] ? link_to("Average Time", {sort: "average_time"}, data: {sort: "average_time"}) : "Average Time" %></th>
         <th class="width-33"><%= local_assigns[:sort_headers] ? link_to("Calls", {sort: "calls"}, data: {sort: "calls"}) : "Calls" %></th>
+        <% if @query_trends_by_key.present? %>
+          <th class="width-25">14-Day Trend</th>
+        <% end %>
       </tr>
     </thead>
   <% end %>
   <tbody id="queries">
     <% if queries.empty? %>
       <tr>
-        <td colspan="3">
+        <td colspan="<%= @query_trends_by_key.present? ? 4 : 3 %>">
           <p class="queries-info text-muted">
             <% if local_assigns[:xhr] %>
               No data available for this time.
@@ -55,9 +58,20 @@
             <% end %>
           </span>
         </td>
+        <% if @query_trends_by_key.present? %>
+          <% trend = @query_trends_by_key[[query[:query_hash], query[:user]]] %>
+          <td>
+            <span class="trend-pill <%= pghero_query_trend_class(trend) %>"><%= pghero_query_trend_label(trend) %></span>
+            <% if trend && trend[:change_pct] %>
+              <div class="tiny text-muted">
+                <%= number_with_precision(trend[:recent_average_time].to_f, precision: 1) %> ms recent
+              </div>
+            <% end %>
+          </td>
+        <% end %>
       </tr>
       <tr>
-        <td colspan="3" class="query-row">
+        <td colspan="<%= @query_trends_by_key.present? ? 4 : 3 %>" class="query-row">
           <pre><code class="query-code"><%= query[:query] %></code></pre>
           <% if query[:query] == "<insufficient privilege>" %>
             <p class="text-muted">For security reasons, only superusers can see queries executed by other users.</p>

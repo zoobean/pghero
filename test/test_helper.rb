@@ -8,6 +8,35 @@ class Minitest::Test
     @database ||= PgHero.databases[:primary]
   end
 
+  def with_stubbed_methods(object, stubs)
+    singleton_class = class << object; self; end
+    originals = {}
+
+    stubs.each do |name, implementation|
+      original =
+        if singleton_class.instance_methods(false).include?(name) || singleton_class.private_instance_methods(false).include?(name)
+          singleton_class.instance_method(name)
+        elsif object.class.method_defined?(name) || object.class.private_method_defined?(name)
+          object.class.instance_method(name)
+        end
+
+      originals[name] = original
+
+      if implementation.respond_to?(:call)
+        singleton_class.send(:define_method, name, &implementation)
+      else
+        singleton_class.send(:define_method, name) { |*args, **kwargs, &block| implementation }
+      end
+    end
+
+    yield
+  ensure
+    stubs.each_key do |name|
+      singleton_class.send(:remove_method, name) rescue nil
+      singleton_class.send(:define_method, name, originals[name]) if originals[name]
+    end
+  end
+
   def with_explain(value)
     PgHero.config.merge!({"explain" => value})
     yield

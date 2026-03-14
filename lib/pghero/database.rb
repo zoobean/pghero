@@ -4,11 +4,13 @@ module PgHero
     include Methods::Connections
     include Methods::Constraints
     include Methods::Explain
+    include Methods::Health
     include Methods::Indexes
     include Methods::Kill
     include Methods::Maintenance
     include Methods::Queries
     include Methods::QueryStats
+    include Methods::Releases
     include Methods::Replication
     include Methods::Sequences
     include Methods::Settings
