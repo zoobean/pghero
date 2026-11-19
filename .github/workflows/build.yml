@@ -7,7 +7,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - ruby: "4.0"
+          - ruby: "4.0.10"
             gemfile: Gemfile
             postgres: 18
           - ruby: 3.4
